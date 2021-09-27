@@ -2,7 +2,7 @@ import pygame
 
 
 class Queen(pygame.sprite.Sprite):
-    SIZE = 30
+    SIZE = 50
 
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)

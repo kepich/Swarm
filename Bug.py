@@ -7,8 +7,8 @@ from Display import Display
 
 
 class Bug(pygame.sprite.Sprite):
-    SIZE = 15
-    MOVEMENT_SPEED = 1.5
+    SIZE = 5
+    MOVEMENT_SPEED = 4
     HEAR_RANGE = 50
 
     def __init__(self, x, y):
@@ -39,7 +39,9 @@ class Bug(pygame.sprite.Sprite):
 
     def set_movement(self, vector):
         vector_len = sqrt(vector[0] * vector[0] + vector[1] * vector[1])
-        self.move_vector = [self.MOVEMENT_SPEED * vector[0] / vector_len, self.MOVEMENT_SPEED * vector[1] / vector_len]
+
+        if vector_len > 0.001:
+            self.move_vector = [self.MOVEMENT_SPEED * vector[0] / vector_len, self.MOVEMENT_SPEED * vector[1] / vector_len]
 
     def update(self, *action, **kwargs) -> None:
         if action[0] == "move":
@@ -57,28 +59,31 @@ class Bug(pygame.sprite.Sprite):
                                         self.groups()[0].sprites()))
 
             if len(hearable_bugs) > 0:
-                if self.target == 1:
-                    best_bug = min(hearable_bugs, key=lambda bug: bug.target_food)
+                best_bug_food = min(hearable_bugs, key=lambda bug: bug.target_food)
+                best_bug_food_queen = min(hearable_bugs, key=lambda bug: bug.target_queen)
 
-                    if self.target_food > best_bug.target_food:
-                        self.move_vector = [best_bug.move_vector[0] - self.move_vector[0],
-                                            best_bug.move_vector[1] - self.move_vector[1]]
+                if self.target_food > (best_bug_food.target_food + self.HEAR_RANGE):
+                    self.target_food = best_bug_food.target_food + self.HEAR_RANGE
+                    if self.target == 1:
+                        self.set_movement([best_bug_food.rect.x - self.rect.x, best_bug_food.rect.y - self.rect.y])
 
-                else:
-                    best_bug = min(hearable_bugs, key=lambda bug: bug.target_queen)
+                if self.target_queen > (best_bug_food_queen.target_queen + self.HEAR_RANGE):
+                    self.target_queen = best_bug_food.target_queen + self.HEAR_RANGE
+                    if self.target == -1:
+                        self.set_movement([best_bug_food_queen.rect.x - self.rect.x, best_bug_food_queen.rect.y - self.rect.y])
 
-                    if self.target_queen > best_bug.target_queen:
-                        self.move_vector = [best_bug.move_vector[0] - self.move_vector[0],
-                                            best_bug.move_vector[1] - self.move_vector[1]]
 
     def move(self, food, queens):
-        if self.target == 1:    # target - food
-            collisions = pygame.sprite.spritecollide(self, food, False)
-            if len(collisions) > 0:
+        collisions_food = pygame.sprite.spritecollide(self, food, False)
+        collisions_queens = pygame.sprite.spritecollide(self, queens, False)
+
+        if len(collisions_food) > 0:
+            self.target_food = 0
+            if self.target == 1:  # target - food
                 self.turn_around()
-        else:                   # target - queen
-            collisions = pygame.sprite.spritecollide(self, queens, False)
-            if len(collisions) > 0:
+        elif len(collisions_queens) > 0:
+            self.target_queen = 0
+            if self.target == -1:  # target - food
                 self.turn_around()
 
         self.x_pos += self.move_vector[0]
@@ -86,6 +91,8 @@ class Bug(pygame.sprite.Sprite):
 
         self.rect.x = self.x_pos
         self.rect.y = self.y_pos
+
+        self.inc_counters()
 
     def inc_counters(self):
         self.target_food += 1

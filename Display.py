@@ -16,3 +16,6 @@ class Display:
             objects[key].draw(self.screen)
 
         pygame.display.flip()
+
+    def set_caption(self, text):
+        pygame.display.set_caption(text)
