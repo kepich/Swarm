@@ -2,7 +2,7 @@ import pygame
 
 
 class Food(pygame.sprite.Sprite):
-    SIZE = 50
+    SIZE = 30
 
     def __init__(self, x, y):
         pygame.sprite.Sprite.__init__(self)
@@ -12,7 +12,7 @@ class Food(pygame.sprite.Sprite):
         self.image.set_colorkey((0, 0, 0))
 
         pygame.draw.circle(self.image, (0, 255, 0), (Food.SIZE // 2, Food.SIZE // 2), Food.SIZE // 2)
-
+        self.mask = pygame.mask.from_surface(self.image)
         self.rect = self.image.get_rect()
         self.rect.x = x
         self.rect.y = y
